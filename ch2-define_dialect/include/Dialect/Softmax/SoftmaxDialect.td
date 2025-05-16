@@ -1,7 +1,7 @@
 #ifndef __SOFTMAX_DIALECT_
 #define __SOFTMAX_DIALECT_
 
-#include "mlir/IR/DialectBase.td"
+include "mlir/IR/DialectBase.td"
 
 
 // 
@@ -23,7 +23,7 @@ def SoftmaxDialect : Dialect{
   // These are dialects that this dialect may involve in canonicalization
   // pattern or interfaces.
   //  方言的依赖
-  let dependentDialects = ["::mlir::Tensor::TensorDialect"];
+  let dependentDialects = ["::mlir::tensor::TensorDialect"];
 
   // A list of key/value pair representing an attribute type and a name.
   // This will generate helper classes on the dialect to be able to
@@ -48,7 +48,7 @@ def SoftmaxDialect : Dialect{
   // dialect declaration.
   // 额外的声明 原封不动将代码贴到代码中
   let extraClassDeclaration = [{
-    static void sayHello();
+    static void SayHello();
   }];
 
   // If this dialect overrides the hook for materializing constants.

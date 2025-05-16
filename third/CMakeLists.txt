@@ -1,0 +1,5 @@
+set(LLVM_ENABLE_PROJECTS "mlir;clang")
+set(LLVM_TARGET_TO_BUILD "Native")
+set(LLVM_ENABLE_ASSEPTIONS OFF)
+set(CMAKE_BUILD_TYPE "Release")
+add_subdirectory(llvm-project/llvm)
