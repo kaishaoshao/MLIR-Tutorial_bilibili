@@ -4,30 +4,29 @@
 
 #include "Dialect/Softmax/SoftmaxDialect.h"
 
-#include <llvm/Support/Printable.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/raw_os_ostream.h>
-#include <mlir/Dialect/Tensor/IR/Tensor.h>
+
 
 #define FIX
 #include "Dialect/Softmax/SoftmaxDialect.cpp.inc"
 #undef FIX
 
-namespace mlir {
-
-namespace Softmax {
+namespace mlir::Softmax {
+    // 实现方言的初始化方法
     void SoftmaxDialect::initialize() {
-        llvm::outs() << "Softmax dialect initialized\n";
+        llvm::outs() << "Softmax dialect initialized"
+                 << getDialectNamespace() <<"\n";
     }
 
+    // 实现方言的析构函数
     void SoftmaxDialect::SayHello() {
-      llvm::outs() << "Hello from Softmax dialect\n";
+      llvm::outs() << "Hello from Softmax dialect"
+                 << getDialectNamespace() <<"\n";
     }
 
     SoftmaxDialect::~SoftmaxDialect() {
-        llvm::outs() << "deconstruct Softmax dialect\n";
+        llvm::outs() << "deconstruct Softmax dialect"
+                 << getDialectNamespace() <<"\n";
     }
 
-} // namespace softmax
-
-} // namespace mlir
+} // namespace mlir::Softmax
