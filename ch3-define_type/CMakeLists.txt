@@ -1,0 +1,23 @@
+set(ch_num 3)
+
+list(APPEND LLVM_CMAKE_DIR "${CMAKE_CURRENT_BINARY_DIR}/
+            ../third/llvm-project/llvm/lib/cmake/llvm")
+list(APPEND  MLIR_CMAKE_DIR "${CMAKE_CURRENT_BINARY_DIR}/
+            ../lib/cmake/mlir")
+
+list(APPEND CMAKE_MODULE_PATH ${MLIR_CMAKE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
+
+include(LLVMConfig)
+include(MLIRConfig)
+include(TableGen)
+include(AddLLVM)
+include(AddMLIR)
+include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(${MLIR_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+add_subdirectory(include)
+add_subdirectory(src)
+add_executable(CH-${ch_num} "main.cpp")
+target_link_directories(CH-${ch_num} MLIRSoftmaxDialect${ch_num} MLIRGPUDialect)

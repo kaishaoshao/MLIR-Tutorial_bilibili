@@ -16,4 +16,4 @@ add_subdirectory(third)
 
 
 add_subdirectory(ch2-define_dialect)
-
+add_subdirectory(ch3-define_type)
