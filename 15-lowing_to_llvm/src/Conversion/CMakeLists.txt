@@ -1,0 +1,3 @@
+add_subdirectory(NorthStarToLinalg)
+add_subdirectory(NorthStarLegalize)
+add_subdirectory(NorthStarToFunc)

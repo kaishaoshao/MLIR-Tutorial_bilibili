@@ -15,24 +15,26 @@
 
 #include <memory>
 
-#include "Conversion/NorthStarToLinalg/NorthStarToLinalg.h"
+#include "Conversion/NorthStarToFunc/NorthStarToFunc.h"
 #include "Dialect/NorthStar/IR/NorthStarDialect.h"
 #include "Dialect/NorthStar/IR/NorthStarOps.h"
 #include "Dialect/NorthStar/IR/NorthStarTypes.h"
-#include "llvm/Support/Casting.h"
+#include "Utils/Key.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/DialectConversion.h"
 
-#define DEBUG_TYPE "convert-north-satr-to-linalg"
-
+#define DEBUG_TYPE "convert-north-satr-to-func"
 namespace mlir::north_star {
 
-#define GEN_PASS_DEF_CONVERTNORTHSTARTOLINALGPASS
+#define GEN_PASS_DEF_CONVERTNORTHSTARTOFUNCPASS
 #include "Conversion/Passes.h.inc"
 
 }  // namespace mlir::north_star
@@ -40,43 +42,37 @@ namespace mlir::north_star {
 using namespace ::mlir;
 using namespace ::mlir::north_star;
 
-struct NorthStarToLinalgPassPass
-    : public mlir::north_star::impl::ConvertNorthStarToLinalgPassBase<
-          NorthStarToLinalgPassPass> {
+struct NorthStarToFuncPassPass
+    : public mlir::north_star::impl::ConvertNorthStarToFuncPassBase<
+          NorthStarToFuncPassPass> {
   void runOnOperation() override;
 };
 
-void configNorthStarToLinalgTarget(ConversionTarget& target) {
+void configNorthStarToFuncTarget(ConversionTarget& target) {
+  target.addIllegalOp<north_star::TensorToNSTensorOp, north_star::BufferOp,
+                      north_star::GetTensorOp>();
   target.addLegalDialect<tensor::TensorDialect>();
-  target.addLegalDialect<linalg::LinalgDialect>();
+  target.addLegalDialect<func::FuncDialect>();
   target.addLegalDialect<arith::ArithDialect>();
+  target.addLegalDialect<LLVM::LLVMDialect>();
   target.addLegalOp<UnrealizedConversionCastOp>();
-  target.addLegalOp<BufferCastOp>();
-  target.addDynamicallyLegalOp<ReturnOp>([](ReturnOp op) {
-    for (auto type : op->getOperandTypes()) {
-      if (isa<::mlir::north_star::NSTensorType>(type)) return false;
-    }
-    return true;
-  });
-  target.addDynamicallyLegalOp<DeviceKernelOp>([](DeviceKernelOp op) {
-    for (auto type : op.getArgs().getTypes()) {
-      if (isa<::mlir::north_star::NSTensorType>(type)) return false;
-    }
-    return true;
-  });
-  target.addDynamicallyLegalOp<SoftmaxOp>([](Operation* op) {
-    return !llvm::isa<DeviceKernelOp>(op->getParentOp());
-  });
 }
-void NorthStarToLinalgPassPass::runOnOperation() {
+
+void NorthStarToFuncPassPass::runOnOperation() {
   LLVM_DEBUG(llvm::dbgs() << llvm::formatv("run in {0}\n", getPassName()));
   auto module = getOperation();
+  auto main_func = module.lookupSymbol<func::FuncOp>(KEntryPointName);
+  if (!main_func || !main_func.isPublic()) {
+    module.emitError() << "Cannot find host entry function";
+    signalPassFailure();
+    return;
+  }
   TypeConverter type_convert;
-  initNorthStarToLinalgTypeConvert(type_convert);
+  initNorthStarToFuncTypeConvert(type_convert);
   RewritePatternSet patterns(&getContext());
-  populateNorthStarToLinalgPatterns(type_convert, patterns);
+  populateNorthStarToFuncPatterns(type_convert, patterns);
   ConversionTarget target(getContext());
-  configNorthStarToLinalgTarget(target);
+  configNorthStarToFuncTarget(target);
   if (failed(applyPartialConversion(module, target, std::move(patterns))))
     signalPassFailure();
   LLVM_DEBUG(llvm::dbgs() << llvm::formatv("run out: {0}\n", getPassName()));
